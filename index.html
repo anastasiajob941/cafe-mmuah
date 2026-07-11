@@ -179,12 +179,38 @@
   }
   nav.links a:hover::after{ transform: scaleX(1); }
   .nav-cta{ display:flex; align-items:center; gap:28px; }
-  .burger{ display:none; flex-direction:column; gap:5px; cursor:pointer; flex:none; }
-  .burger span{ width:24px; height:1px; background: var(--ivory); }
+  .burger{ display:none; flex-direction:column; gap:5px; cursor:pointer; flex:none; z-index:95; position:relative; }
+  .burger span{ width:24px; height:1px; background: var(--ivory); transition: transform .35s var(--ease), opacity .25s var(--ease); }
+  .burger.active span:nth-child(1){ transform: translateY(6px) rotate(45deg); }
+  .burger.active span:nth-child(2){ opacity:0; }
+  .burger.active span:nth-child(3){ transform: translateY(-6px) rotate(-45deg); }
 
   .mobile-nav-extra{ display:none; }
   @media (max-width: 980px){
-    nav.links{ display:none; }
+    nav.links{
+      display:flex; flex-direction:column; align-items:flex-start;
+      position:fixed; inset:0;
+      background: rgba(15,11,7,.98);
+      backdrop-filter: blur(16px);
+      padding: 110px 32px 48px;
+      gap:0;
+      overflow-y:auto;
+      opacity:0; visibility:hidden; pointer-events:none;
+      transform: translateY(-10px);
+      transition: opacity .4s var(--ease), transform .4s var(--ease), visibility 0s linear .4s;
+      z-index: 90;
+    }
+    nav.links.nav-open{
+      opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0);
+      transition: opacity .4s var(--ease), transform .4s var(--ease), visibility 0s linear 0s;
+    }
+    nav.links a{
+      font-size: 17px;
+      letter-spacing: 0.08em;
+      width:100%;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(247,243,238,.14);
+    }
     .burger{ display:flex; }
     header{ background: rgba(28,22,16,.7); backdrop-filter: blur(10px); }
     header.scrolled{ background: rgba(28,22,16,.7); backdrop-filter: blur(10px); }
@@ -193,10 +219,10 @@
     .desktop-lang-switch, .desktop-reserve-btn{ display:none; }
     .mobile-nav-extra{
       display:flex; flex-direction:column; align-items:center; gap:22px;
-      width:100%; margin-top:26px; padding-top:26px;
+      width:100%; margin-top:32px; padding-top:32px;
       border-top:1px solid rgba(247,243,238,.15);
     }
-    .mobile-nav-extra .btn{ width:100%; max-width:220px; }
+    .mobile-nav-extra .btn{ width:100%; max-width:260px; }
   }
   .desktop-reserve-btn span, .mobile-nav-extra .btn span{ color: #ffffff; }
   @media (max-width: 520px){
@@ -525,9 +551,17 @@
   }
 
   @media (max-width: 980px){
-    .menu-grid{ grid-template-columns: repeat(2,1fr); grid-auto-rows: 220px; gap:14px; }
-    .menu-tile{ grid-column: span 1 !important; grid-row: span 1 !important; }
-    .menu-tile.half:nth-child(1){ grid-column: span 2 !important; grid-row: span 2 !important; }
+    .menu-grid{ grid-template-columns: 1fr; grid-auto-rows: auto; gap: 26px; }
+    .menu-tile{
+      grid-column: span 1 !important;
+      grid-row: span 1 !important;
+      aspect-ratio: 4/3.3;
+    }
+    .menu-tile.plain{ aspect-ratio: 4/2.6; }
+    .menu-tile.photo .tile-content{ padding: 22px; }
+    .menu-tile h4{ font-size: 22px; }
+    .menu-tile .tag{ font-size: 11px; }
+    .menu-tile .desc{ font-size: 13px; }
     .menu-section{ padding: 96px 0; }
   }
 
@@ -839,7 +873,7 @@
           <span class="sep">·</span>
           <button type="button" data-lang="ru">RUS</button>
         </div>
-        <a href="#reserve" class="btn btn-outline"><span data-i18n="nav_reserve">Reserve</span></a>
+        <a href="#reserve" class="btn btn-solid"><span data-i18n="nav_reserve">Reserve</span></a>
       </div>
     </nav>
     <div class="nav-cta">
@@ -1276,13 +1310,19 @@
 
   document.querySelectorAll('.reveal, .rule').forEach(el => io.observe(el));
 
-  // Mobile menu toggle (simple)
+  // Mobile menu toggle (full-screen overlay)
   const burger = document.querySelector('.burger');
   const links = document.querySelector('nav.links');
+  function setMenuOpen(isOpen){
+    links.classList.toggle('nav-open', isOpen);
+    burger.classList.toggle('active', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
   burger.addEventListener('click', () => {
-    const open = links.style.display === 'flex';
-    links.style.display = open ? 'none' : 'flex';
-    links.style.cssText += open ? '' : 'position:fixed; top:76px; left:0; right:0; background:rgba(28,22,16,.98); flex-direction:column; padding:30px; gap:24px; backdrop-filter:blur(14px);';
+    setMenuOpen(!links.classList.contains('nav-open'));
+  });
+  links.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => setMenuOpen(false));
   });
 
   // Reservation form submit
